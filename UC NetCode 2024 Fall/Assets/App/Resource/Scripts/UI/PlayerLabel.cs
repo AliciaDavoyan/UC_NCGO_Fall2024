@@ -32,12 +32,12 @@ public class PlayerLabel : MonoBehaviour
         onKickClicked?.Invoke(_clientID);
     }
 
-    private void setKickActivated(bool isOn)
+    public void SetKickActive(bool isOn)
     {
         _kickBttn.gameObject.SetActive(isOn);
     }
 
-    private void SetReady(bool ready)
+    public void SetReady(bool ready)
     {
         if (ready)
         {

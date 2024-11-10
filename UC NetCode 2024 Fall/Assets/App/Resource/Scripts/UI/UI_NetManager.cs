@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
 using UnityEngine.UI;
+using System;
 
 public class UI_NetManager : NetworkBehaviour
 {
 
     [SerializeField] private Button _serverBttn, _clientBttn, _hostBttn, _startBttn;
 
-    [SerializeField] private GameObject _connectionBttnGroup;
+    [SerializeField] private GameObject _connectionBttnGroup, _socialPanel;
 
     [SerializeField] private SpawnController _mySpawnController;
 
@@ -30,15 +31,29 @@ public class UI_NetManager : NetworkBehaviour
         if (IsServer)
         {
             _mySpawnController.SpawnAllPlayers();
-            _startBttn.gameObject.SetActive(false);
+            //_startBttn.gameObject.SetActive(false);
+
+            HideGuiRpc();
         }
+    }
+
+    [Rpc(SendTo.Everyone)]
+    private void HideGuiRpc()
+    {
+        _socialPanel.SetActive(false);
     }
 
     private void ServerClick()
     {
-        NetworkManager.Singleton.StartServer();      // Starts the NetworkManager as just a server (that is, no local client).
-        _connectionBttnGroup.SetActive(false);
-        _startBttn.gameObject.SetActive(true);
+        var isSuccessful = NetworkManager.Singleton.StartServer();      // Starts the NetworkManager as just a server (that is, no local client).
+
+        if(isSuccessful)
+        {
+            _connectionBttnGroup.SetActive(false);
+            _socialPanel.SetActive(false);
+        }
+        
+        //_startBttn.gameObject.SetActive(true);
 
     }
 
