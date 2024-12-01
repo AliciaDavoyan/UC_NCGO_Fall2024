@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -104,6 +105,52 @@ public class NetworkedPlayerData : NetworkBehaviour
             }
         }
         return myMatch;
+    }
+
+    // Get player name
+    public string GetPlayerName(ulong clientID)
+    {
+        //grab the player data matching client ID and spit out a string
+        return FindPlayerInfoData(clientID)._name.ToString(); //
+    }
+
+    /**
+    // Get player health
+    public string GetPlayerHealth(float healthValue)
+    {
+        //grab the player data matching client ID and spit out a string
+        return FindPlayerInfoData(healthValue)._health; //
+    }**/
+
+    // Access list of names and set it
+    public void SetClientNewName(ulong clientID, FixedString64Bytes newName)
+    {
+        int idx = FindPlayerIndex(clientID);
+        if (idx == -1) { return; }
+
+        // Grab info, change it, and pass it back to networkList
+        PlayerInfoData playerInfo = new PlayerInfoData();
+        playerInfo = _allConnectedPlayers[idx];
+
+        // Change name 
+        playerInfo._name = newName;
+        // Update new status to list
+        _allConnectedPlayers[idx] = playerInfo;
+    }
+    // Set Player health?
+    public void SetClientHealth(ulong clientID, float healthVal)
+    {
+        int idx = FindPlayerIndex(clientID);
+        if (idx == -1) { return; }
+
+        // Grab info, change it, and pass it back to networkList
+        PlayerInfoData playerInfo = new PlayerInfoData();
+        playerInfo = _allConnectedPlayers[idx];
+
+        // Change health 
+        playerInfo._health = healthVal;
+        // Update new status to list
+        _allConnectedPlayers[idx] = playerInfo;
     }
 
     public void UpdateReadyClient(ulong clientID, bool isReady)

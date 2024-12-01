@@ -11,6 +11,7 @@ public struct PlayerInfoData : INetworkSerializable, IEquatable<PlayerInfoData>
     public FixedString64Bytes _name;
     public bool _isPlayerReady;
     public Color _colorId;
+    public float _health;
 
     public PlayerInfoData(ulong id)
     {
@@ -18,6 +19,17 @@ public struct PlayerInfoData : INetworkSerializable, IEquatable<PlayerInfoData>
         _name = "";
         _isPlayerReady = false;
         _colorId = Color.cyan;
+        _health = 100f;
+    }
+
+    //Polymorphism Approach on constructor could set it at creation here
+    public PlayerInfoData(ulong id, FixedString64Bytes startName)
+    {
+        _clientId = id;
+        _name = startName;
+        _isPlayerReady = false;
+        _colorId = Color.cyan;
+        _health = 100f;
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -29,6 +41,7 @@ public struct PlayerInfoData : INetworkSerializable, IEquatable<PlayerInfoData>
             reader.ReadValueSafe(out _name);
             reader.ReadValueSafe(out _isPlayerReady);
             reader.ReadValueSafe(out _colorId);
+            reader.ReadValueSafe(out _health);
         }
         else
         {
@@ -37,12 +50,13 @@ public struct PlayerInfoData : INetworkSerializable, IEquatable<PlayerInfoData>
             writer.WriteValueSafe(_name);
             writer.WriteValueSafe(_isPlayerReady);
             writer.WriteValueSafe(_colorId);
+            writer.WriteValueSafe(_health);
         }
     }
 
     public bool Equals(PlayerInfoData other)
     {
-        return _clientId == other._clientId && _name.Equals(other._name) && other._isPlayerReady && _colorId.Equals(other._colorId);
+        return _clientId == other._clientId; //&& _name.Equals(other._name) && other._isPlayerReady && _colorId.Equals(other._colorId);
     }
 
     public override bool Equals(object obj)
@@ -52,7 +66,7 @@ public struct PlayerInfoData : INetworkSerializable, IEquatable<PlayerInfoData>
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(_clientId, _name, _isPlayerReady, _colorId);
+        return HashCode.Combine(_clientId, _name, _isPlayerReady, _colorId, _health);
     }
 
     public override string ToString() => _name.Value.ToString();

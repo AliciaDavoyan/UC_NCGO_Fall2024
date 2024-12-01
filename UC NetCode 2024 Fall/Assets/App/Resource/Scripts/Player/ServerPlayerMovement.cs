@@ -11,10 +11,12 @@ public class ServerPlayerMovement : NetworkBehaviour
     [SerializeField] private Animator _myAnimator;
     [SerializeField] private NetworkAnimator _myNetAnimator;
     [SerializeField] private float _pSpeed;
-    [SerializeField] private Transform _pTransform;
-
+    [SerializeField] private BulletSpawner _bulletSpawner;
     public CharacterController _CC;
     private MyPlayerInputActions _playerInput;
+    private static readonly int IsSprinting = Animator.StringToHash("IsSprinting");
+    private static readonly int IsWalking = Animator.StringToHash("IsWalking");
+    Vector3 _moveDirection = new Vector3(0, 0f, 0);
 
     // Start is called before the first frame update
     void Start()
@@ -52,19 +54,23 @@ public class ServerPlayerMovement : NetworkBehaviour
             // Move if server
             Move(moveInput, isPunching, isSprinting, isJumping);
         }
-        else if (IsClient)
+        else if (IsClient && IsHost)
         {
             // Send a move request rpc to move the player.
             MoveServerRPC(moveInput, isPunching, isSprinting, isJumping);
         }
+        if (isPunching)
+        {
+            _bulletSpawner.FireProjectileRpc();
+        }
 
     }
 
-    private void Move(Vector2 _input, bool isPunching, bool isSprinting, bool isJumping)
+    private void Move(Vector2 input, bool isPunching, bool isSprinting, bool isJumping)
     {
-        Vector3 _moveDirection = _input.x * _pTransform.right + _input.y * _pTransform.forward;
+        _moveDirection = new Vector3(input.x, 0f, input.y);
 
-        _myAnimator.SetBool("IsWalking", _input.x != 0 || _input.y != 0);
+        _myAnimator.SetBool("IsWalking", input.x != 0 || input.y != 0);
 
         // You must use the netanimator to set trigger
         if (isJumping) { _myNetAnimator.SetTrigger("JumpTrigger"); }
@@ -72,7 +78,13 @@ public class ServerPlayerMovement : NetworkBehaviour
 
         // Any property besides that, you can use animator
         _myAnimator.SetBool("IsSprinting", isSprinting);
-        if(isSprinting)
+
+        if (input.x == 0f && input.y == 0f)
+        {
+            return;
+        }
+
+        if (isSprinting)
         {
             // move a little faster when sprinting
             _CC.Move(_moveDirection * (_pSpeed * 1.3f) * Time.deltaTime);
@@ -81,6 +93,9 @@ public class ServerPlayerMovement : NetworkBehaviour
         {
             _CC.Move(_moveDirection * _pSpeed * Time.deltaTime);
         }
+
+        // rotate player into the move direction we are facing
+        transform.forward = _moveDirection;
     }
 
     [Rpc(SendTo.Server)]
